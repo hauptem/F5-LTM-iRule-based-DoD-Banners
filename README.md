@@ -10,7 +10,10 @@
 
 ---
 
-An LTM-only solution for presenting a one time DOD Banner
+An LTM-only solution for presenting a one time DOD Banner. 
+Two formats are presented:
+- iRule only solution with embedded html, css, and javascript
+- iRule and iFile solution with html, css, and javascript contained in an iFile
 
 ## Background
 
