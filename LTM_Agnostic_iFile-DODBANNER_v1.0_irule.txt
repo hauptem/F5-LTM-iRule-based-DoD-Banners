@@ -1,0 +1,81 @@
+# LTM_Agnostic_iFile-DODBANNER_v1.0_irule
+#
+# Revision 1.0 - July 2025
+# E. Haupt 
+#
+# This iRule is used for presenting a DOD Banner to a client when APM is not being used.
+# Checks for the presence of cookie BIGIP_DODBANNER and presents a DOD Banner when the cookie is not seen.
+# Sets cookie BIGIP_DODBANNER when the client accepts the banner terms. The cookie has an age of 600 seconds,
+# but will be refreshed with every subsequent GET request.
+# Can be bypassed if the first GET request is to the URI: /dod_banner_bypass
+# The DOD Banner html code must be in an iFile named 'dod_banner_html' for this iRule to function.
+#
+when HTTP_REQUEST {
+    # Store original URI for redirect and create lowercase version for comparison
+    set original_uri [HTTP::uri]
+    set uri [string tolower $original_uri]
+
+    # Refresh the banner acknowledgment cookie on GET requests if it already exists
+    if { [HTTP::method] eq "GET" && [HTTP::cookie exists "BIGIP_DODBANNER"] } {
+        HTTP::header insert "Set-Cookie" "BIGIP_DODBANNER=1; path=/; Max-Age=600; Secure; HttpOnly; SameSite=Strict"
+    }
+
+    # Handle banner acceptance
+    if { $uri starts_with "/dod_banner_accept" } {
+        # Get stored original URI or default to root
+        if { [HTTP::cookie exists "BIGIP_ORIGURI"] } {
+            set redirect_uri [HTTP::cookie "BIGIP_ORIGURI"]
+        } else {
+            set redirect_uri "/"
+        }
+
+        # Redirect to original URI, set banner cookie, and clean up stored URI
+        HTTP::respond 302 Location $redirect_uri \
+            "Set-Cookie" "BIGIP_DODBANNER=1; path=/; Max-Age=600; Secure; HttpOnly; SameSite=Strict" \
+            "Set-Cookie" "BIGIP_ORIGURI=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;" \
+            "X-Frame-Options" "DENY" \
+            "X-Content-Type-Options" "nosniff"
+        return
+    }
+
+    # Bypass banner for acknowledgment endpoint and static resources
+    if { $uri starts_with "/dod_banner_bypass" || [regexp {(\.css|\.js|\.png|\.jpg|\.gif|\.ico)$} $uri] } {
+        # Handle post-acknowledgment redirect
+        if { $uri starts_with "/dod_banner_bypass" } {
+            # Get stored original URI or default to root
+            if { [HTTP::cookie exists "BIGIP_ORIGURI"] } {
+                set redirect_uri [HTTP::cookie "BIGIP_ORIGURI"]
+            } else {
+                set redirect_uri "/"
+            }
+
+            # Redirect to original URI, set banner cookie, and clean up stored URI
+            HTTP::respond 302 Location $redirect_uri \
+                "Set-Cookie" "BIGIP_DODBANNER=1; path=/; Max-Age=600; Secure; HttpOnly; SameSite=Strict" \
+                "Set-Cookie" "BIGIP_ORIGURI=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;" \
+                "X-Frame-Options" "DENY" \
+                "X-Content-Type-Options" "nosniff"
+            return
+        }
+        # Allow static files to pass through without banner
+        return
+    }
+
+    # Display DoD banner if user hasn't acknowledged it
+    if { not ([HTTP::cookie exists "BIGIP_DODBANNER"]) } {
+        # Load HTML content from iFile with error handling
+        if { [catch {ifile get "dod_banner_html"} dod_banner_html] } {
+            log local0.error "Failed to load DoD banner HTML from iFile: $dod_banner_html"
+            # Fallback to basic HTML error page
+            set dod_banner_html "<html><head><title>System Error</title></head><body><h1>System temporarily unavailable</h1><p>Please try again later.</p></body></html>"
+        }
+
+        # Display banner page and store original URI for post-acknowledgment redirect
+        HTTP::respond 200 content $dod_banner_html \
+            "Content-Type" "text/html" \
+            "Set-Cookie" "BIGIP_ORIGURI=$original_uri; path=/; Max-Age=28800; Secure; HttpOnly; SameSite=Strict" \
+            "X-Frame-Options" "DENY" \
+            "X-Content-Type-Options" "nosniff"
+        return
+    }
+}

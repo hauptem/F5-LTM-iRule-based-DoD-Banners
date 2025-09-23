@@ -1,0 +1,197 @@
+# LTM_Agnostic_DODBANNER-RED_v1.0_irule
+#
+# Revision 1.0 - July 2025
+# E. Haupt 
+#
+# This iRule is used for presenting a DOD Banner to a client when APM is not being used.
+# Checks for the presence of cookie BIGIP_DODBANNER and presents a DOD Banner when the cookie is not seen.
+# Sets cookie BIGIP_DODBANNER when the client accepts the banner terms.
+# Can be bypassed if the first GET request is to URI: /dod_banner_bypass
+#
+when HTTP_REQUEST {
+    # Store original URI for redirect and create lowercase version for comparison
+    set original_uri [HTTP::uri]
+    set uri [string tolower $original_uri]
+
+    # Refresh the banner acknowledgment cookie on GET requests if it already exists
+    if { [HTTP::method] eq "GET" && [HTTP::cookie exists "BIGIP_DODBANNER"] } {
+        HTTP::header insert "Set-Cookie" "BIGIP_DODBANNER=1; path=/; Max-Age=600; Secure; HttpOnly; SameSite=Strict"
+    }
+
+    # Handle banner acceptance
+    if { $uri starts_with "/dod_banner_accept" } {
+        # Get stored original URI or default to root
+        if { [HTTP::cookie exists "BIGIP_ORIGURI"] } {
+            set redirect_uri [HTTP::cookie "BIGIP_ORIGURI"]
+        } else {
+            set redirect_uri "/"
+        }
+
+        # Redirect to original URI, set banner cookie, and clean up stored URI
+        HTTP::respond 302 Location $redirect_uri \
+            "Set-Cookie" "BIGIP_DODBANNER=1; path=/; Max-Age=600; Secure; HttpOnly; SameSite=Strict" \
+            "Set-Cookie" "BIGIP_ORIGURI=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;" \
+            "X-Frame-Options" "DENY" \
+            "X-Content-Type-Options" "nosniff"
+        return
+    }
+
+    # Bypass banner for acknowledgment endpoint and static resources
+    if { $uri starts_with "/dod_banner_bypass" || [regexp {(\.css|\.js|\.png|\.jpg|\.gif|\.ico)$} $uri] } {
+        # Handle post-acknowledgment redirect
+        if { $uri starts_with "/dod_banner_bypass" } {
+	    # Get stored original URI or default to root
+            if { [HTTP::cookie exists "BIGIP_ORIGURI"] } {
+                set redirect_uri [HTTP::cookie "BIGIP_ORIGURI"]
+            } else {
+                set redirect_uri "/"
+            }
+
+            # Redirect to original URI, set banner cookie, and clean up stored URI
+            HTTP::respond 302 Location $redirect_uri \
+                "Set-Cookie" "BIGIP_DODBANNER=1; path=/; Max-Age=600; Secure; HttpOnly; SameSite=Strict" \
+                "Set-Cookie" "BIGIP_ORIGURI=deleted; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT;" \
+                "X-Frame-Options" "DENY" \
+                "X-Content-Type-Options" "nosniff"
+            return
+        }
+        # Allow static files to pass through without banner
+        return
+    }
+
+    # Display DoD banner if user hasn't acknowledged it
+    if { not ([HTTP::cookie exists "BIGIP_DODBANNER"]) } {
+# HTML content for DoD consent banner
+set dod_banner_html "
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>DoD Warning Banner</title>
+<style>
+body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, Tahoma, sans-serif;
+  background-color: #606060;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+}
+.container {
+  background-color: #fff;
+  border: 3px solid #ff0000;
+  box-shadow: 0 8px 16px rgba(0,0,0,0.3);
+  padding: 1.5em;
+  max-width: 100ch;
+  width: 90%;
+  border-radius: 8px;
+  animation: fadeIn 0.5s ease-in, borderPulse 3s ease-in-out infinite;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(0); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes borderPulse {
+  0%,100% { border-color: #ff0000; }
+  50% { border-color: #ff4444; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.container p {
+  line-height: 1.4;
+  margin-bottom: 0.8em;
+  text-align: left;
+}
+.container ul {
+  padding-left: 1.5em;
+  text-align: left;
+}
+.container li {
+  margin-bottom: 0.8em;
+  line-height: 1.4;
+}
+.button {
+  width: 320px;
+  height: 70px;
+  font-size: 1.1em;
+  font-weight: bold;
+  background: linear-gradient(145deg,#e0e0e0,#d0d0d0);
+  color: #333;
+  border: 2px solid #999;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: block;
+  margin: 1.5em auto 0 auto;
+  position: relative;
+  overflow: hidden;
+}
+.button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+  transition: left 0.6s;
+}
+.button:hover {
+  background: linear-gradient(145deg, #ff4444, #ff0000);
+  color: white;
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 
+  0 15px 35px rgba(255, 0, 0, 0.4),
+  inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  border-color: #dd0000;
+}
+.button:hover::before {
+  left: 100%;
+}
+.button:active {
+  transform: translateY(1px);
+  box-shadow: 0 2px 6px rgba(255,0,0,0.2);
+}
+</style>
+<script>
+function SubmitResult() {
+  document.getElementById('acceptForm').submit();
+}
+</script>
+</head>
+<body>
+  <div class='container'>
+    <p style='font-size:1.3em;font-weight:bold;'>DOD NOTICE AND CONSENT BANNER</p>
+    <p>You are accessing a U.S. Government (USG) Information System (IS) that is provided for USG-authorized use only.</p>
+    <p>By using this IS (which includes any device attached to this IS), you consent to the following conditions:</p>
+    <ul>
+      <li>The USG routinely intercepts and monitors communications on this IS for purposes including, but not limited to, penetration testing, COMSEC monitoring, network operations and defense, personnel misconduct (PM), law enforcement (LE), and counterintelligence (CI) investigations.</li>
+      <li>At any time, the USG may inspect and seize data stored on this IS.</li>
+      <li>Communications using, or data stored on, this IS are not private, are subject to routine monitoring, interception, and search, and may be disclosed or used for any USG-authorized purpose.</li>
+      <li>This IS includes security measures (e.g., authentication and access controls) to protect USG interests--not for your personal benefit or privacy.</li>
+      <li>Notwithstanding the above, using this IS does not constitute consent to PM, LE or CI investigative searching or monitoring of the content of privileged communications, or work product, related to personal representation or services by attorneys, psychotherapists, or clergy, and their assistants. Such communications and work product are private and confidential.</li>
+      <li>See User Agreement for details.</li>
+    </ul>
+    <form id='acceptForm' method='get' action='/dod_banner_accept'>
+      <button type='button' class='button' onclick='SubmitResult()'>I ACKNOWLEDGE<br>AND CONSENT</button>
+    </form>
+  </div>
+<noscript><div style='text-align:center;color:red;font-weight:bold;'>JavaScript is required to continue.</div></noscript>
+</body>
+</html>"
+        
+        # Display banner page and store original URI for post-acknowledgment redirect
+        HTTP::respond 200 content $dod_banner_html \
+            "Content-Type" "text/html" \
+            "Set-Cookie" "BIGIP_ORIGURI=$original_uri; path=/; Max-Age=28800; Secure; HttpOnly; SameSite=Strict" \
+            "X-Frame-Options" "DENY" \
+            "X-Content-Type-Options" "nosniff" Connection Close
+        event disable
+        return
+    }
+}
