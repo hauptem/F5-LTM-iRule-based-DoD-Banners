@@ -15,6 +15,8 @@ Two formats are presented:
 - iRule only solution with embedded html, css, and javascript
 - iRule and iFile solution with html, css, and javascript contained in an iFile
 
+Note that this solution expects https; if you require these banners on an http virtualserver, remove the "Secure" flag from the iRule-set cookies. 
+
 ## Background
 
 The use of a DoD Warning Banner is a Defense Information Security Agency (DISA) Security Technical Implementation Guide (STIG) requirement that is typically assigned as a Category III line item.
