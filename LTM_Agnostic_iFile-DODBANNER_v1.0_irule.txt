@@ -1,7 +1,10 @@
 # LTM_Agnostic_iFile-DODBANNER_v1.0_irule
 #
 # Revision 1.0 - July 2025
-# E. Haupt 
+# Author: Eric Haupt
+# License: MIT
+# Copyright (c) 2025 Eric Haupt
+# Released under the MIT License. See LICENSE file for details.
 #
 # This iRule is used for presenting a DOD Banner to a client when APM is not being used.
 # Checks for the presence of cookie BIGIP_DODBANNER and presents a DOD Banner when the cookie is not seen.
