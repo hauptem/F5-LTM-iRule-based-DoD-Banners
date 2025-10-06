@@ -1,6 +1,5 @@
 # LTM_Agnostic_DODBANNER-YELLOW_v1.0_irule
-#
-# Revision 1.0 - July 2025
+# Version 1.0
 # Author: Eric Haupt
 # License: MIT
 # Copyright (c) 2025 Eric Haupt
