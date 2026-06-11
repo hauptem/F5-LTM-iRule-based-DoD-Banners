@@ -11,6 +11,8 @@
 # but will be refreshed with every subsequent GET request.
 # Can be bypassed if the first GET request is to the URI: /dod_banner_bypass
 # The DOD Banner html code must be in an iFile named 'dod_banner_html' for this iRule to function.
+# NOTE: Cookies are set with the Secure flag and will not be honored by browsers over plain HTTP.
+# If applying this iRule to an HTTP (non-TLS) virtual server, remove "Secure; " from all Set-Cookie headers.
 #
 
 # Validate a client-supplied redirect target. Returns the URI if it is a safe

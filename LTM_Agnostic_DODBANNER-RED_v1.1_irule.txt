@@ -9,6 +9,8 @@
 # Checks for the presence of cookie BIGIP_DODBANNER and presents a DOD Banner when the cookie is not seen.
 # Sets cookie BIGIP_DODBANNER when the client accepts the banner terms.
 # Can be bypassed if the first GET request is to URI: /dod_banner_bypass
+# NOTE: Cookies are set with the Secure flag and will not be honored by browsers over plain HTTP.
+# If applying this iRule to an HTTP (non-TLS) virtual server, remove "Secure; " from all Set-Cookie headers.
 #
 
 # Validate a client-supplied redirect target. Returns the URI if it is a safe
