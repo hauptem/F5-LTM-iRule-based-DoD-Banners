@@ -1,25 +1,21 @@
-# F5-iRule-LTM-based-DOD-Banners
+# F5-iRule-LTM-based-DoD-Banners
 
 ![License](https://img.shields.io/badge/license-MIT-green)
-![F5 Compatible](https://img.shields.io/badge/F5%20BIG--IP-compatible-orange)
 ![TMOS Version](https://img.shields.io/badge/TMOS-15.0%2B-red)
 ![F5 iRules](https://img.shields.io/badge/F5-iRules%20(Tcl)-FF6600?logo=f5&logoColor=white)
-![F5 APM](https://img.shields.io/badge/F5-APM%20Auth-FF6600?logo=f5&logoColor=white)
-![JavaScript](https://img.shields.io/badge/JavaScript-ES6+-F7DF1E?logo=javascript&logoColor=black)
-![HTML5](https://img.shields.io/badge/HTML5-Semantic-E34F26?logo=html5&logoColor=white)
 
----
-
-An LTM-only solution for presenting a one time DOD Banner. 
+An LTM-only solution for presenting a one-time DoD Banner. 
 Two formats are presented:
 - iRule only solution with embedded html, css, and javascript
 - iRule and iFile solution with html, css, and javascript contained in an iFile
 
-Note that this solution expects https; if you require these banners on an http virtualserver, remove the "Secure" flag from the iRule - set cookies. 
+Note that this solution expects HTTPS; if you require these banners on an HTTP virtual server, remove the "Secure" flag from the cookies the iRule sets.
+
+The iRule also implements a bypass URI that allows specific requests to skip the banner; see the iRule source for the URI and its behavior.
 
 ## Background
 
-The use of a DoD Warning Banner is a Defense Information Security Agency (DISA) Security Technical Implementation Guide (STIG) requirement that is typically assigned as a Category III line item.
+The use of a DoD Warning Banner is a Defense Information Systems Agency (DISA) Security Technical Implementation Guide (STIG) requirement that is typically assigned as a Category III line item.
 
 **STIG Requirement:**
 > "The BIG-IP Core implementation must be configured to display the Standard Mandatory DoD-approved Notice and Consent Banner before granting access to virtual servers. (STIG ID: F5BI-LT-000023)"
@@ -27,11 +23,11 @@ The use of a DoD Warning Banner is a Defense Information Security Agency (DISA) 
 ## Prerequisites
 
 - Familiarity with F5's GUI and basic administration of the F5 application delivery controller
-- This process should be performed on an offline test instance of an access policy and migrated to a production virtual server upon successful testing and acceptance of the modified access policy operation
+- This process should be performed on an offline test virtual server and migrated to a production virtual server upon successful testing and acceptance of the banner operation
 
 ## Available Banner Types
 
-The guide includes three color variants of the DoD Warning Banner:
+This solution includes three color variants of the DoD Warning Banner:
 
 ### Green Banner
 - Border color: Green (#00b000)
@@ -39,14 +35,14 @@ The guide includes three color variants of the DoD Warning Banner:
 
 <img width="1163" height="725" alt="Image" src="https://github.com/user-attachments/assets/f3974f49-9a81-48db-91d1-9348b0ffc96d" />
 
-### Red Banner  
+### Red Banner
 - Border color: Red (#e60000)
 - Button hover: Red gradient
 
 <img width="1151" height="720" alt="Image" src="https://github.com/user-attachments/assets/9910ca87-42c1-4876-aaba-12bf631776f3" />
 
 ### Yellow Banner
-- Border color: Yellow (#e6c200) 
+- Border color: Yellow (#e6c200)
 - Button hover: Yellow gradient
 
 <img width="1153" height="721" alt="Image" src="https://github.com/user-attachments/assets/22cb3d91-a8c9-4400-ace9-15c050832904" />
@@ -65,7 +61,7 @@ After implementation:
 1. Verify the banner displays correctly on the test virtual server
 2. Validate the banner text matches DoD requirements
 3. Confirm the "I ACKNOWLEDGE AND CONSENT" button functions properly
-4. Test that users can proceed through the access policy after consent
+4. Test that users can proceed through to the application after consent
 5. Test that the bypass URI functions as expected
 6. Only migrate to production after successful testing and acceptance
 
