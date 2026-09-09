@@ -2,7 +2,6 @@
 # Version 1.1
 # Author: Eric Haupt
 # License: MIT
-# Copyright (c) 2026 Eric Haupt
 # Released under the MIT License. See LICENSE file for details.
 #
 # This iRule is used for presenting a DOD Banner to a client when APM is not being used.
