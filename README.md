@@ -9,7 +9,7 @@ Two formats are presented:
 - iRule only solution with embedded html, css, and javascript
 - iRule and iFile solution with html, css, and javascript contained in an iFile
 
-Note that this solution expects HTTPS; if you require these banners on an HTTP virtual server, remove the "Secure" flag from the cookies the iRule sets.
+Note that this solution expects HTTPS; if you require these banners on an HTTP virtual server, remove the "Secure" flag from every cookie that the iRule sets.
 
 The iRule also implements a bypass URI that allows specific requests to skip the banner; see the iRule source for the URI and its behavior.
 
