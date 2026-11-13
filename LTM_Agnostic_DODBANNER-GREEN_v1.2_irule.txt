@@ -1,9 +1,6 @@
 # LTM_Agnostic_DODBANNER-GREEN_v1.2_irule
 # Version 1.2
 # Author: Eric Haupt
-# License: MIT
-# Copyright (c) 2026 Eric Haupt
-# Released under the MIT License. See LICENSE file for details.
 #
 # This iRule is used for presenting a DOD Banner to a client when APM is not being used.
 # Checks for the presence of cookie BIGIP_DODBANNER and presents a DOD Banner when the cookie is not seen.
